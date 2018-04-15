@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generation</title>
+    <link href="/static/css/mdui.min.css" rel="stylesheet">
+</head>
+<body style="overflow-x: hidden;font-family: Roboto, Noto, Helvetica, Arial, sans-serif">
+    <div class="mdui-appbar">
+        <div class="mdui-toolbar  mdui-color-indigo-700">
+            <i class="mdui-icon material-icons">fingerprint</i>
+            <a href="javascript:;" class="mdui-typo-headline">Generation</a>
+            <a href="javascript:;" class="mdui-typo-title">Code</a>
+            <div class="mdui-toolbar-spacer"></div>
+        </div>
+    </div>
+
+    <div id="connParam" class="mdui-col-md-8 mdui-col-offset-md-1">
+        <div class="mdui-panel mdui-hoverable">
+            <div class="mdui-panel-item mdui-panel-item-open mdui-color-grey-300">
+                <div class="mdui-panel-item-body">
+                    <div class="mdui-row">
+                        <div class="mdui-col-md-3">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">textsms</i>
+                                <label class="mdui-textfield-label">Host</label>
+                                <input id="host" class="mdui-textfield-input" type="text" value="localhost"/>
+                            </div>
+                        </div>
+                        <div class="mdui-col-md-3 mdui-col-offset-md-3">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">textsms</i>
+                                <label class="mdui-textfield-label">Port</label>
+                                <input id="port" class="mdui-textfield-input" onblur="getSchemas()" type="text" value="3306"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mdui-row">
+                        <div class="mdui-col-md-3">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">textsms</i>
+                                <label class="mdui-textfield-label">Schema:</label>
+                                <!--<input id="schema" class="mdui-textfield-input" type="text" value="hoop"/>-->
+                                <select class="mdui-select" style="margin-left: 140px;width: 200px">
+                                    <option value="-1">No Value</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mdui-col-md-3 mdui-col-offset-md-3">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">textsms</i>
+                                <label class="mdui-textfield-label">UserName</label>
+                                <input id="userName" class="mdui-textfield-input" type="text" value="root"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="test" class="mdui-row">
+                        <div class="mdui-col-md-3">
+                            <div class="mdui-textfield mdui-textfield-floating-label">
+                                <i class="mdui-icon material-icons">textsms</i>
+                                <label class="mdui-textfield-label">Password</label>
+                                <input id="password" class="mdui-textfield-input" type="password" value="root"/>
+                            </div>
+                        </div>
+                        <div class="mdui-col-md-4 mdui-col-offset-md-3">
+                            <button onclick="getTables()" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent mdui-color-blue-800" style="margin-top: 35px">
+                                get tables
+                            </button>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <button onclick="testConnection()" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent mdui-color-green-800" style="margin-top: 35px">
+                                test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mdui-col-md-2">
+        <div class="mdui-panel mdui-hoverable">
+            <div class="mdui-panel-item mdui-panel-item-open mdui-color-grey-300">
+                <div id="selection" class="mdui-panel-item-body">
+                    <div class="mdui-row">
+                        <label class="mdui-switch" style="margin: 10px 0 0 10px">
+                            <strong style="margin-top: 20px">Selection</strong>
+                        </label>
+                    </div>
+                    <div class="mdui-row">
+                        <label class="mdui-switch" style="margin: 10px 0 0 10px">
+                            <input type="checkbox" checked/>
+                            <i class="mdui-switch-icon" onclick="changeSelectValue(this.parentNode.nextSibling.nextSibling.nextSibling.nextSibling)"></i>
+                        </label>
+                        <input type="hidden" value="isAnnotation">
+                        <input type="hidden" value="true">
+                        <p style="float: right;padding: 3px 20px 0 0">是否生成注释</p>
+                    </div>
+                    <div class="mdui-row">
+                        <label class="mdui-switch" style="margin: 10px 0 0 10px">
+                            <input type="checkbox"/>
+                            <i class="mdui-switch-icon" onclick="changeSelectValue(this.parentNode.nextSibling.nextSibling.nextSibling.nextSibling)"></i>
+                        </label>
+                        <input type="hidden" value="isPending">
+                        <input type="hidden" value="false">
+                        <p style="float: right;padding: 3px 20px 0 0">待定</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class=" mdui-col-md-8 mdui-col-offset-md-1">
+        <div id="tables" style="display: none;" class="mdui-table-fluid mdui-hoverable">
+            <table class="mdui-table mdui-table-selectable mdui-table-hoverable">
+                <thead>
+                    <tr>
+                        <th>Table_Name</th>
+                        <th>Table_Comment
+                            <button mdui-dialog="{target: '#generate', modal:'true'}" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent mdui-color-green-800" style="float: right;">
+                                Generater
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="table">
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mdui-dialog" id="generate">
+        <div class="mdui-dialog-title">Are you sure?</div>
+        <div class="mdui-dialog-content">
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">Please enter project package → eg: io.github.nzlong.entity</label>
+                <input id="packageName" class="mdui-textfield-input">
+            </div>
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <label class="mdui-textfield-label">Please enter the file path → eg: /Users/nzlong/code_generate/io/github/nzlong/entity</label>
+                <input id="filePath" class="mdui-textfield-input">
+            </div>
+        </div>
+        <div class="mdui-dialog-actions">
+            <button class="mdui-btn mdui-ripple" mdui-dialog-close>Cancel</button>
+            <button class="mdui-btn mdui-ripple" onclick="generate()">Confirm</button>
+        </div>
+    </div>
+
+
+    <script src="/static/js/mdui.min.js"></script>
+    <script src="/static/js/jquery-3.2.1.min.js"></script>
+    <script>
+        var current = {};
+
+        /**
+         * 获取数据库名称
+         */
+        function getSchemas() {
+            var conn = getConnectionInfo();
+            $.ajax({
+                url: "/getSchemas",
+                type: "POST",
+                data: JSON.stringify(conn),
+                success: function (data) {
+                    debugger;
+                    if (data.success) {
+                        for (var i = 0; i < data.payload.length; i++) {
+                            var table = data.payload[i];
+                            $("select").append('<option value="'+ table  + '">'+ table  + '</option>');
+                        }
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function (data) {
+                    debugger;
+                    alert(data);
+                }
+            });
+        }
+
+        /**
+         * 测试连接
+         */
+        function testConnection() {
+            var conn = getConnectionInfo();
+            $(".mdui-col-md-1").remove();
+            $.ajax({
+                url: "/testConnection",
+                type: "POST",
+                data: JSON.stringify(conn),
+                success: function (data) {
+                    debugger;
+                    if (data.success) {
+                        $("#test").append("<div class=\"mdui-col-md-1\"><p style='margin-top: 45px;color: green'>" + data.payload.reason + "</p></div>");
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function (data) {
+                    debugger;
+                    alert(data);
+                }
+            });
+        }
+
+        function generate() {
+            var gener = {};
+            gener.conn = getConnectionInfo();
+            gener.tables = getSelectTables();
+            gener.path = $("#filePath").val();
+            gener.packageName = $("#packageName").val();
+            gener.selection = getSelection();
+            $.ajax({
+                url: "/generateStart",
+                type: "POST",
+                data: JSON.stringify(gener),
+                success: function (data) {
+                    debugger;
+                    if (data.success) {
+                        alert("生成完成！");
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function (data) {
+                    debugger;
+                    alert(data);
+                }
+            });
+        }
+
+        function getSelection() {
+            var selections = [];
+            var inputs = $("#selection input[type='checkbox']");
+            debugger;
+            for (var i = 0; i < inputs.length; i++) {
+                var input = inputs[i];
+                var selecter = {};
+                selecter.name = input.parentNode.nextSibling.nextSibling.value;
+                selecter.value = input.parentNode.nextSibling.nextSibling.nextSibling.nextSibling.value;
+                selections.push(selecter);
+            }
+            return selections;
+        }
+
+        function changeSelectValue(node) {
+            var value = node.value;
+            if (value.indexOf(true) != -1) {
+                node.value = false;
+            }
+            if (value.indexOf(false) != -1) {
+                node.value = true;
+            }
+        }
+
+        /**
+         * 获取所有选择的表名称
+         *
+         * @returns {Array}
+         */
+        function getSelectTables() {
+            var tables = [];
+            var inputs = $("#tables input[type='checkbox']");
+            for (var i = 1; i < inputs.length; i++) {
+                var input = inputs[i];
+                var claz = input.parentNode.parentNode.parentNode.getAttribute('class');
+                if (claz != null && claz != "") {
+                    tables.push(current[i - 1].tableName);
+                }
+            }
+            return tables;
+        }
+
+        /**
+         * 根据连接信息获取表名称和注释填充表格
+         */
+        function getTables() {
+            var conn = getConnectionInfo();
+            $.ajax({
+                url: "/getTables",
+                type: "POST",
+                data: JSON.stringify(conn),
+                success: function (data) {
+                    debugger;
+                    if (data.success) {
+                        $("#tables").attr("style", "");
+                        $("#table").html("");
+                        current = data.payload.data;
+                        for (var i = 0; i < data.payload.data.length; i++) {
+                            var table = data.payload.data[i];
+                            $("#table").append('<tr>\n' +
+                                               '     <td>' + table.tableName + '</td>\n' +
+                                               '     <td>' + table.tableComment + '</td>\n' +
+                                               '</tr>');
+                        }
+                        mdui.updateTables($("table"));
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function (data) {
+                    debugger;
+                    alert(data);
+                }
+            })
+        }
+
+        /**
+         * 获取连接信息
+         */
+        function getConnectionInfo() {
+            var conn = {};
+            conn.host = $("#host").val();
+            conn.port = $("#port").val();
+            conn.schema = $("select").val();
+            conn.userName = $("#userName").val();
+            conn.password = $("#password").val();
+            // current = conn.schema;
+            return conn;
+        }
+
+    </script>
+</body>
+</html>
