@@ -4,6 +4,7 @@ import com.blade.ioc.annotation.Bean;
 import com.blade.ioc.annotation.Inject;
 import com.blade.kit.DateKit;
 import com.blade.kit.StringKit;
+import io.github.nzlong.generate.GenerationApplication;
 import io.github.nzlong.generate.dao.GenerationDao;
 import io.github.nzlong.generate.entity.Column;
 import io.github.nzlong.generate.entity.ConnectionReqVO;
@@ -129,6 +130,9 @@ public class GenerationService {
      * @throws FileNotFoundException
      */
     protected void writeToFile(String content, String path, String fileName) throws FileNotFoundException {
+        if (StringKit.isNotBlank(path)) {
+            path = GenerationApplication.class.getResource("").getPath().concat("production").concat("entity");
+        }
         File dir = new File(path);
         if (!dir.exists()) {
             dir.mkdir();

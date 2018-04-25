@@ -212,6 +212,10 @@
             gener.path = $("#filePath").val();
             gener.packageName = $("#packageName").val();
             gener.selection = getSelection();
+            if (gener.packageName) {
+                alert("Please input the packageName");
+                return;
+            }
             $.ajax({
                 url: "/generateStart",
                 type: "POST",
