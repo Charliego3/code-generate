@@ -39,6 +39,8 @@ public class GenerationService {
 
     private Connection connection;
 
+    private String removePrefix = "";
+
     /**
      * 获取所有表信息
      * @param connectionReqVO
@@ -101,13 +103,14 @@ public class GenerationService {
                       List<Column> columnList = generationDao.getColumns(schema, tableName, connection);
                       clazz.append(buildImport(columnList));
                       clazz.append(buildAnnotation(getTableComment(tableName)));
-                      clazz.append(String.format(Const.PUBLIC_CLASS, convertToCamelPrefixUpper(tableName, null)));
+                      clazz.append(String.format(Const.PUBLIC_CLASS, convertToCamelPrefixUpper(tableName)));
                       clazz.append(buildField(columnList, isAnnotation));
                       clazz.append(buildEmptyStrucutre(tableName, isAnnotation));
                       clazz.append(buildStrucutre(columnList, tableName, isAnnotation));
                       clazz.append(buildInstance(tableName));
                       clazz.append(buildSetter(columnList, tableName));
                       clazz.append(buildGetter(columnList));
+                      clazz.append(buildToString(columnList, tableName));
                       clazz.append(Const.CLASS_END);
                       writeToFile(clazz.toString(), generateReqVO.getPath(), tableName);
                       System.out.println(String.format("[DEBUG] End generate table [%s]", tableName));
@@ -130,9 +133,42 @@ public class GenerationService {
         if (!dir.exists()) {
             dir.mkdir();
         }
-        File clazz = new File(path.concat(File.separator).concat(convertToCamelPrefixUpper(fileName, null)).concat(Const.FILE_TYPE));
+        File clazz = new File(path.concat(File.separator).concat(convertToCamelPrefixUpper(fileName)).concat(Const.FILE_TYPE));
         PrintStream ps = new PrintStream(clazz);
         ps.println(content);
+    }
+
+    /**
+     * 构建toString()
+     *
+     * @param columnList
+     * @param tableName
+     * @return
+     */
+    public String buildToString(List<Column> columnList, String tableName) {
+        StringBuilder toString = new StringBuilder();
+        toString.append("\t@Override\n")
+                .append("\tpublic String toString() {\n")
+                .append("\t\treturn \"")
+                .append(convertToCamelPrefixUpper(tableName))
+                .append(" {\"");
+        if (BaseKit.isNotEmptyOrNull(columnList)) {
+            columnList.forEach(column -> {
+                String columName = convertToCamelPrefixLower(column.getColumnName());
+                toString.append("\n\t\t\t\t+ \"")
+                        .append(columName)
+                        .append(" = \'\" + ")
+                        .append(columName)
+                        .append(" + \"' ,\"");
+            });
+        }
+        String toStringStr = toString.toString();
+        if (toStringStr.contains(",")) {
+            toStringStr = toString.substring(0, toString.lastIndexOf("+"));
+            toStringStr += "+ \"'\"";
+        }
+        toStringStr += "\n\t\t\t\t+ \"}\";\n\t}\n";
+        return toStringStr;
     }
 
     /**
@@ -148,7 +184,7 @@ public class GenerationService {
                 getter.append("\tpublic ")
                       .append(column.getType())
                       .append(" get")
-                      .append(convertToCamelPrefixUpper(column.getColumnName(), null))
+                      .append(convertToCamelPrefixUpper(column.getColumnName()))
                       .append("() {\n")
                       .append("\t\treturn this.")
                       .append(convertToCamelPrefixLower(column.getColumnName()))
@@ -173,9 +209,9 @@ public class GenerationService {
             columnList.forEach(column -> {
                 String columnNameLower = convertToCamelPrefixLower(column.getColumnName());
                 setter.append("\tpublic ")
-                      .append(convertToCamelPrefixUpper(table, null))
+                      .append(convertToCamelPrefixUpper(table))
                       .append(" set")
-                      .append(convertToCamelPrefixUpper(column.getColumnName(), null))
+                      .append(convertToCamelPrefixUpper(column.getColumnName()))
                       .append("(")
                       .append(column.getType())
                       .append(" ")
@@ -201,7 +237,7 @@ public class GenerationService {
      */
     protected String buildInstance(String table) {
         StringBuilder instance = new StringBuilder();
-        String convert = convertToCamelPrefixUpper(table, null);
+        String convert = convertToCamelPrefixUpper(table);
         instance.append("\tpublic static ".concat(convert)
                                           .concat(" getInstance() {\n")
                                           .concat("\t\treturn new ")
@@ -243,21 +279,21 @@ public class GenerationService {
             if (isAnnotation) {
                 stru.append(String.format(Const.STRUCUTRE_ANNOTATION, Const.ALL_STRUCUTRE));
             }
-            stru.append(String.format(Const.STRUCUTRE, convertToCamelPrefixUpper(strucutre, null)).concat("("));
+            stru.append(String.format(Const.STRUCUTRE, convertToCamelPrefixUpper(strucutre)).concat("("));
             StringBuilder paramBu = new StringBuilder();
-            columnList.forEach(column -> {
-                paramBu.append(column.getType().concat(" ").concat(convertToCamelPrefixLower(column.getColumnName())).concat(", "));
-            });
+            columnList.forEach(column ->
+                paramBu.append(column.getType().concat(" ").concat(convertToCamelPrefixLower(column.getColumnName())).concat(", "))
+            );
             String param = paramBu.toString();
             param = param.substring(0, param.lastIndexOf(","));
             stru.append(param);
             stru.append(") {\n");
-            columnList.forEach(column -> {
+            columnList.forEach(column ->
                 stru.append("\t\tthis.".concat(convertToCamelPrefixLower(column.getColumnName()))
                                        .concat(" = ")
                                        .concat(convertToCamelPrefixLower(column.getColumnName()))
-                                       .concat(";\n"));
-            });
+                                       .concat(";\n"))
+            );
             stru.append("\t}\n\n");
         }
         return stru.toString();
@@ -274,7 +310,7 @@ public class GenerationService {
         if (isAnnotation) {
             re = String.format(Const.STRUCUTRE_ANNOTATION, Const.EMPTY_STRUCUTRE);
         }
-        re += String.format(Const.STRUCUTRE, convertToCamelPrefixUpper(strucutre, null)).concat("() {\n\t}\n\n");
+        re += String.format(Const.STRUCUTRE, convertToCamelPrefixUpper(strucutre)).concat("() {\n\t}\n\n");
         return re;
     }
 
@@ -288,7 +324,7 @@ public class GenerationService {
         if (StringKit.isBlank(takeConvert)) {
             return "";
         }
-        String convert = underlineToCamel(takeConvert);
+        String convert = underlineToCamel(takeConvert, false);
         StringBuilder reSb = new StringBuilder();
         reSb.append(Character.toLowerCase(convert.charAt(0)));
         reSb.append(convert.substring(1));
@@ -299,17 +335,16 @@ public class GenerationService {
      * 将下划线转换为首字母大写的驼峰格式
      *
      * @param takeConvert
-     * @param prefix
      * @return
      */
-    protected String convertToCamelPrefixUpper(String takeConvert, String prefix) {
+    protected String convertToCamelPrefixUpper(String takeConvert) {
         if (StringKit.isBlank(takeConvert)) {
             return "";
         }
         StringBuilder reSb = new StringBuilder();
-        int prefixLength = prefix == null ? 0 : prefix.length();
+        int prefixLength = removePrefix == null ? 0 : removePrefix.length();
         String cutTakeCon = takeConvert.substring(prefixLength);
-        String convert = underlineToCamel(cutTakeCon);
+        String convert = underlineToCamel(cutTakeCon, false);
         reSb.append(Character.toUpperCase(convert.charAt(0)));
         reSb.append(convert.substring(1));
         return reSb.toString();
@@ -321,7 +356,7 @@ public class GenerationService {
      * @param columnName
      * @return
      */
-    protected String underlineToCamel(String columnName) {
+    public String underlineToCamel(String columnName, boolean isConvert) {
         if (StringKit.isBlank(columnName)) {
             return "";
         }
@@ -337,7 +372,10 @@ public class GenerationService {
                     sb.append(Character.toUpperCase(columnName.charAt(i)));
                 }
             } else {
-                sb.append(Character.toLowerCase(c));
+                if (isConvert) {
+                    c = Character.toLowerCase(c);
+                }
+                sb.append(c);
             }
         }
 
@@ -405,4 +443,5 @@ public class GenerationService {
     protected String buildPackage(String packageName) {
         return "package " + packageName + ";\n";
     }
+
 }

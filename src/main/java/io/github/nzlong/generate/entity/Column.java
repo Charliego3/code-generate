@@ -41,4 +41,14 @@ public class Column {
         this.remark = remark;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "Column {"
+                + "columnName = '" + columnName + "' ,"
+                + "type = '" + type + "' ,"
+                + "remark = '" + remark + "'"
+                + "}";
+    }
+
 }
