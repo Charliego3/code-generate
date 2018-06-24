@@ -94,6 +94,7 @@ public class GenerationService {
         String schema = generateReqVO.getConnectionReqVO().getSchema();
         Stream.of(generateReqVO.getTables())
               .filter(tableName -> StringKit.isNotBlank(tableName))
+              .map(tableName -> convertToCamelPrefixUpper(tableName))
               .forEach(tableName -> {
                   try {
                       StringBuilder clazz = new StringBuilder();
@@ -170,7 +171,7 @@ public class GenerationService {
             toStringStr = toString.substring(0, toString.lastIndexOf("+"));
             toStringStr += "+ \"'\"";
         }
-        toStringStr += "\n\t\t\t\t+ \"}\";\n\t}\n";
+        toStringStr += "\n\t\t\t\t+ \"}\";\n\t}\n\n";
         return toStringStr;
     }
 
@@ -242,7 +243,7 @@ public class GenerationService {
         StringBuilder instance = new StringBuilder();
         String convert = convertToCamelPrefixUpper(table);
         instance.append("\tpublic static ".concat(convert)
-                                          .concat(" getInstance() {\n")
+                                          .concat(" newInstance() {\n")
                                           .concat("\t\treturn new ")
                                           .concat(convert)
                                           .concat("();\n\t}\n\n"));
@@ -260,6 +261,7 @@ public class GenerationService {
         StringBuilder fields = new StringBuilder();
         if (BaseKit.isNotEmptyOrNull(columnList)) {
             columnList.forEach(column -> {
+
                 if (isAnnotation) {
                     fields.append(String.format(Const.FIELD_ANNOTATION, column.getRemark()));
                 }
@@ -327,7 +329,7 @@ public class GenerationService {
         if (StringKit.isBlank(takeConvert)) {
             return "";
         }
-        String convert = underlineToCamel(takeConvert, false);
+        String convert = underlineToCamel(takeConvert, true);
         StringBuilder reSb = new StringBuilder();
         reSb.append(Character.toLowerCase(convert.charAt(0)));
         reSb.append(convert.substring(1));
@@ -347,7 +349,7 @@ public class GenerationService {
         StringBuilder reSb = new StringBuilder();
         int prefixLength = removePrefix == null ? 0 : removePrefix.length();
         String cutTakeCon = takeConvert.substring(prefixLength);
-        String convert = underlineToCamel(cutTakeCon, false);
+        String convert = underlineToCamel(cutTakeCon, true);
         reSb.append(Character.toUpperCase(convert.charAt(0)));
         reSb.append(convert.substring(1));
         return reSb.toString();
